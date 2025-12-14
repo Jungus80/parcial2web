@@ -6,17 +6,25 @@ require_once '../clases/Seguridad.php';
 require_once '../clases/ExcelReporter.php';
 require_once '../clases/UserManager.php'; // Para listar usuarios en el filtro
 require_once __DIR__ . '/../clases/Translator.php';
+require_once __DIR__ . '/../clases/MetricsManager.php';
 
 $db = new DB();
 $conn = $db->getConnection();
 $excelReporter = new ExcelReporter();
 $userManager = new UserManager();
+$metricsManager = new MetricsManager();
 
 // Verificar autenticación y rol de administrador
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_rol'] ?? 'cliente') !== 'admin') {
     header('Location: ../login.php');
     exit();
 }
+
+// Obtener métricas generales
+$totalRevenue = $metricsManager->getTotalRevenue();
+$totalCostOfGoodsSold = $metricsManager->getTotalCostOfGoodsSold();
+$grossProfit = $metricsManager->getGrossProfit();
+$grossProfitMargin = $metricsManager->getGrossProfitMargin();
 
 $message = '';
 $error = '';
@@ -52,6 +60,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'generate_report') {
     <?php include 'includes/admin_header.php'; ?>
     <div class="admin-container">
         <h2 data-translate-key="sales_report_title"><?= Translator::get('sales_report_title') ?? 'Reporte de Ventas' ?></h2>
+
+        <div class="metrics-summary mb-4">
+            <h4>Métricas de Ganancias:</h4>
+            <p><strong>Total de Ingresos:</strong> $<?= number_format($totalRevenue, 2) ?></p>
+            <p><strong>Costo Total de Bienes Vendidos (COGS):</strong> $<?= number_format($totalCostOfGoodsSold, 2) ?></p>
+            <p><strong>Ganancia Bruta:</strong> $<?= number_format($grossProfit, 2) ?></p>
+            <p><strong>Margen de Ganancia Bruta:</strong> <?= number_format($grossProfitMargin, 2) ?>%</p>
+        </div>
 
         <?php if ($message): ?>
             <p class="message success-message"><?= $message ?></p>

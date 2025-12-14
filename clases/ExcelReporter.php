@@ -14,9 +14,28 @@ class ExcelReporter {
         // Requiere la librería PhpSpreadsheet. Asegúrate de que esté instalada (ej. vía Composer: composer require phpoffice/phpspreadsheet)
         require_once __DIR__ . '/../vendor/autoload.php';
 
-        $query = "SELECT v.ven_id, v.ven_fecha, v.ven_total, v.ven_estado, u.usu_nombre 
+        $query = "SELECT 
+                    v.ven_id, 
+                    v.ven_fecha, 
+                    v.ven_total, 
+                    v.ven_estado, 
+                    u.usu_nombre,
+                    u.usu_email,
+                    dv.dev_cantidad,
+                    dv.dev_precio_unidad_venta,
+                    p.pro_nombre,
+                    p.pro_precio_compra,
+                    (dv.dev_cantidad * p.pro_precio_compra) AS costo_total_producto,
+                    (dv.dev_cantidad * (dv.dev_precio_unidad_venta - p.pro_precio_compra)) AS ganancia,
+                    CASE 
+                        WHEN (dv.dev_cantidad * dv.dev_precio_unidad_venta) > 0 
+                        THEN ((dv.dev_cantidad * (dv.dev_precio_unidad_venta - p.pro_precio_compra)) / (dv.dev_cantidad * dv.dev_precio_unidad_venta)) * 100 
+                        ELSE 0 
+                    END AS margen_ganancia
                   FROM Venta v
                   JOIN Usuario u ON v.ven_usuario = u.usu_id
+                  JOIN Detalle_venta dv ON v.ven_id = dv.dev_venta
+                  JOIN Producto p ON dv.dev_producto = p.pro_id
                   WHERE 1=1";
         $params = [];
 
@@ -33,10 +52,10 @@ class ExcelReporter {
             $params[] = $filters['user_id'];
         }
 
-        $query .= " ORDER BY v.ven_fecha DESC";
+        $query .= " ORDER BY v.ven_fecha DESC, v.ven_id, p.pro_nombre";
 
         $stmt = $this->db->query($query, $params);
-        $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $salesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Crear un nuevo objeto Spreadsheet
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
@@ -45,18 +64,34 @@ class ExcelReporter {
         // Cabeceras de la tabla
         $sheet->setCellValue('A1', 'ID Venta');
         $sheet->setCellValue('B1', 'Fecha');
-        $sheet->setCellValue('C1', 'Total');
-        $sheet->setCellValue('D1', 'Estado');
-        $sheet->setCellValue('E1', 'Usuario');
+        $sheet->setCellValue('C1', 'Usuario');
+        $sheet->setCellValue('D1', 'Correo');
+        $sheet->setCellValue('E1', 'Producto');
+        $sheet->setCellValue('F1', 'Cantidad');
+        $sheet->setCellValue('G1', 'Precio Unidad Venta');
+        $sheet->setCellValue('H1', 'Costo Unitario');
+        $sheet->setCellValue('I1', 'Costo Total Producto');
+        $sheet->setCellValue('J1', 'Ganancia por Producto');
+        $sheet->setCellValue('K1', 'Margen Ganancia (%)');
+        $sheet->setCellValue('L1', 'Total Venta');
+        $sheet->setCellValue('M1', 'Estado Venta');
 
         // Llenar datos
         $row = 2;
-        foreach ($sales as $sale) {
+        foreach ($salesData as $sale) {
             $sheet->setCellValue('A' . $row, $sale['ven_id']);
             $sheet->setCellValue('B' . $row, $sale['ven_fecha']);
-            $sheet->setCellValue('C' . $row, $sale['ven_total']);
-            $sheet->setCellValue('D' . $row, $sale['ven_estado']);
-            $sheet->setCellValue('E' . $row, $sale['usu_nombre']);
+            $sheet->setCellValue('C' . $row, $sale['usu_nombre']);
+            $sheet->setCellValue('D' . $row, $sale['usu_email']);
+            $sheet->setCellValue('E' . $row, $sale['pro_nombre']);
+            $sheet->setCellValue('F' . $row, $sale['dev_cantidad']);
+            $sheet->setCellValue('G' . $row, $sale['dev_precio_unidad_venta']);
+            $sheet->setCellValue('H' . $row, $sale['pro_precio_compra']);
+            $sheet->setCellValue('I' . $row, $sale['costo_total_producto']);
+            $sheet->setCellValue('J' . $row, $sale['ganancia']);
+            $sheet->setCellValue('K' . $row, number_format($sale['margen_ganancia'], 2));
+            $sheet->setCellValue('L' . $row, $sale['ven_total']);
+            $sheet->setCellValue('M' . $row, $sale['ven_estado']);
             $row++;
         }
 

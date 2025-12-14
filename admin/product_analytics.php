@@ -8,6 +8,7 @@ $metricsManager = new MetricsManager();
 $mostViewedProducts = $metricsManager->getMostViewedProducts(10);
 $leastViewedProducts = $metricsManager->getLeastViewedProducts(10);
 ?>
+<link rel="stylesheet" href="admin_styles.css">
 
 <div class="container mt-4">
     <h2 class="mb-4">Product Analytics</h2>

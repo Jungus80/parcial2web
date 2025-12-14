@@ -43,17 +43,29 @@ $sales = $orderManager->getAllSales();
                         <th data-translate-key="sale_date_header"><?= Translator::get('sale_date_header') ?? 'Fecha' ?></th>
                         <th data-translate-key="total_header"><?= Translator::get('total_header') ?? 'Total' ?></th>
                         <th data-translate-key="status_header"><?= Translator::get('status_header') ?? 'Estado' ?></th>
+                        <th data-translate-key="integrity_header"><?= Translator::get('integrity_header') ?? 'Integridad de Firma' ?></th>
                         <th data-translate-key="actions_header"><?= Translator::get('actions_header') ?? 'Acciones' ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($sales as $sale): ?>
+                    <?php 
+                        // Verificación de la integridad de la venta
+                        $isValid = $orderManager->verifySaleIntegrity($sale['ven_id']);
+                    ?>
                     <tr>
                         <td><?= $sale['ven_id'] ?></td>
                         <td><?= $sale['usu_nombre'] ?></td>
                         <td><?= $sale['ven_fecha'] ?></td>
                         <td>$<?= number_format($sale['ven_total'], 2) ?></td>
                         <td><?= $sale['ven_estado'] ?></td>
+                        <td>
+                            <?php if ($isValid): ?>
+                                <span style="color: green; font-weight: bold;">OK</span>
+                            <?php else: ?>
+                                <span style="color: red; font-weight: bold;">ADULTERADA</span>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <a href="invoice.php?saleId=<?= $sale['ven_id'] ?>" target="_blank" class="btn btn-info btn-sm" data-translate-key="view_invoice_button"><?= Translator::get('view_invoice_button') ?? 'Ver Factura' ?></a>
                         </td>
