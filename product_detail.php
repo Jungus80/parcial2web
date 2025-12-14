@@ -16,7 +16,7 @@ if ($productId > 0) {
 
     // Registrar la visita al producto (si el usuario ha aceptado las cookies)
     $userId = $_SESSION['user_id'] ?? 0;
-    $tracker->trackProductView($userId, $productId); // Usar $productId para el ID del producto
+    $obsId = $tracker->trackProductView($userId, $productId); // Usar $productId para el ID del producto y obtener obsId
 
 } else {
     // Redirigir si no se proporciona un ID de producto válido
@@ -66,3 +66,52 @@ if (!$product) {
 </div>
 
 <?php require_once 'footer.php'; ?>
+
+<script>
+    (function() {
+        let startTime = Date.now();
+        let obsId = parseInt(<?= $obsId ?>);
+        console.log('Product Detail Page loaded. Initial obsId:', obsId);
+
+        function sendPermanence() {
+            let endTime = Date.now();
+            let permanence = endTime - startTime; // in milliseconds
+            console.log('Attempting to send permanence. Current obsId:', obsId, 'Permanence:', permanence, 'ms');
+
+            // Check for cookie acceptance here, as the PHP side also checks it.
+            // This is a simplified check for client-side debugging, actual check is server-side.
+            // If you have a client-side way to check $_COOKIE['cookie_accepted'] you can add it.
+            let cookieAccepted = document.cookie.includes('cookie_accepted');
+            console.log('Cookie Accepted:', cookieAccepted);
+
+            if (cookieAccepted && !isNaN(obsId) && obsId > 0 && permanence > 0) {
+                console.log('Sending permanence AJAX for obs_id=' + obsId + ', permanence=' + permanence + 'ms');
+                fetch('track_duration.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        obs_id: obsId,
+                        permanence: permanence
+                    }),
+                }).then(response => {
+                    // console.log('Permanence tracking sent:', response);
+                }).catch(error => {
+                    console.error('Error sending permanence:', error);
+                });
+            }
+        }
+
+        // Track when the user leaves the page or closes the tab
+        window.addEventListener('beforeunload', sendPermanence);
+        // Track when the user switches tabs or minimizes the window
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                sendPermanence();
+            } else {
+                startTime = Date.now(); // Reset start time when coming back
+            }
+        });
+    })();
+</script>

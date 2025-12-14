@@ -3,6 +3,27 @@ session_start();
 
 require_once 'header.php';
 require_once 'clases/OrderManager.php';
+require_once 'clases/Tracker.php'; // Incluir la clase Tracker
+
+$tracker = new Tracker();
+$userId = $_SESSION['user_id'] ?? 0;
+$referrer = $_SERVER['HTTP_REFERER'] ?? null;
+$requestUri = $_SERVER['REQUEST_URI'];
+
+// Lista de extensiones a ignorar
+$ignoredExtensions = ['.ico', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+$isStaticAsset = false;
+foreach ($ignoredExtensions as $ext) {
+    if (str_ends_with($requestUri, $ext)) {
+        $isStaticAsset = true;
+        break;
+    }
+}
+
+$metId = 0;
+if (!$isStaticAsset && isset($_COOKIE['cookie_accepted'])) {
+    $metId = $tracker->trackPageView($userId, $requestUri, null, $referrer);
+}
 
 $orderManager = new OrderManager();
 
@@ -79,3 +100,45 @@ if ($saleId > 0) {
 </div>
 
 <?php require_once 'footer.php'; ?>
+
+<script>
+    (function() {
+        let startTime = Date.now();
+        let metId = parseInt(<?= $metId ?>);
+        console.log('Page loaded. Initial metId:', metId);
+
+        function sendPagePermanence() {
+            let endTime = Date.now();
+            let permanence = endTime - startTime; // in milliseconds
+            console.log('Attempting to send page permanence. Current metId:', metId, 'Permanence:', permanence, 'ms');
+
+            let cookieAccepted = document.cookie.includes('cookie_accepted');
+            console.log('Cookie Accepted:', cookieAccepted);
+
+            if (cookieAccepted && !isNaN(metId) && metId > 0 && permanence > 0) {
+                console.log('Sending page permanence AJAX for met_id=' + metId + ', permanence=' + permanence + 'ms');
+                fetch('track_page_duration.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        met_id: metId,
+                        permanence: permanence
+                    }),
+                }).then(response => {
+                    // console.log('Page permanence tracking sent:', response);
+                }).catch(error => {
+                    console.error('Error sending page permanence:', error);
+                });
+            }
+        }
+
+        window.addEventListener('beforeunload', sendPagePermanence);
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                sendPagePermanence();
+            }
+        });
+    })();
+</script>

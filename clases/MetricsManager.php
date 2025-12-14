@@ -41,17 +41,42 @@ class MetricsManager {
         return (float)$stmt->fetchColumn();
     }
 
-    public function getMostViewedProducts(int $limit = 5): array {
-        // Para LIMIT, los parámetros no pueden ser placeholders; deben concatenarse directamente.
-        // Dado que $limit es un int, es seguro concatenar.
-        $query = "SELECT p.pro_nombre, COUNT(o.obs_producto) as views
+    public function getMostViewedProducts(int $limit = 10): array {
+        $query = "SELECT p.pro_id, p.pro_nombre, p.pro_imagen_url,
+                          COUNT(o.obs_producto) as total_views,
+                          COALESCE(AVG(o.obs_permanencia), 0) as average_permanence
                   FROM Observa o
                   JOIN Producto p ON o.obs_producto = p.pro_id
-                  GROUP BY p.pro_nombre
-                  ORDER BY views DESC
+                  GROUP BY p.pro_id, p.pro_nombre, p.pro_imagen_url
+                  ORDER BY total_views DESC
                   LIMIT " . (int)$limit;
         $stmt = $this->db->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getLeastViewedProducts(int $limit = 10): array {
+      $query = "SELECT p.pro_id, p.pro_nombre, p.pro_imagen_url,
+                        COUNT(o.obs_producto) as total_views,
+                        COALESCE(AVG(o.obs_permanencia), 0) as average_permanence
+                FROM Producto p
+                LEFT JOIN Observa o ON o.obs_producto = p.pro_id
+                GROUP BY p.pro_id, p.pro_nombre, p.pro_imagen_url
+                ORDER BY total_views ASC
+                LIMIT " . (int)$limit;
+      $stmt = $this->db->query($query);
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getProductAnalytics(int $productId): array {
+        $query = "SELECT p.pro_id, p.pro_nombre, p.pro_imagen_url,
+                          COUNT(o.obs_producto) as total_views,
+                          COALESCE(AVG(o.obs_permanencia), 0) as average_permanence
+                  FROM Producto p
+                  LEFT JOIN Observa o ON o.obs_producto = p.pro_id
+                  WHERE p.pro_id = ?
+                  GROUP BY p.pro_id, p.pro_nombre, p.pro_imagen_url";
+        $stmt = $this->db->query($query, [$productId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
     }
 
     public function getSalesByDay(int $days = 7): array {

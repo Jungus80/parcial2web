@@ -27,8 +27,8 @@ if ($saleId <= 0) {
 $orderManager = new OrderManager();
 $sale = $orderManager->getSaleById($saleId);
 
-// Verify if the sale exists and belongs to the logged-in user
-if (!$sale || $sale['ven_usuario'] !== $userId) {
+// Verify if the sale exists and belongs to the logged-in user, or if the user is an admin
+if (!$sale || (($_SESSION['user_rol'] ?? 'cliente') !== 'admin' && $sale['ven_usuario'] !== $userId)) {
     http_response_code(404);
     echo "Factura no encontrada o no tienes permiso para verla.";
     exit;

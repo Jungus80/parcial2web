@@ -202,6 +202,15 @@ class OrderManager {
         return $sale;
     }
 
+    public function getAllSales(): array {
+        $query = "SELECT v.ven_id, v.ven_fecha, v.ven_total, v.ven_estado, u.usu_nombre 
+                  FROM Venta v 
+                  JOIN Usuario u ON v.ven_usuario = u.usu_id
+                  ORDER BY v.ven_fecha DESC";
+        $stmt = $this->db->query($query);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Métodos públicos para acceder a información del carrito a través del OrderManager
     public function getCartItems(): array {
         return $this->cartManager->getCartItems();
@@ -211,6 +220,5 @@ class OrderManager {
         return $this->cartManager->getCartTotal();
     }
 }
-
 
 ?>

@@ -3,6 +3,27 @@ session_start();
 
 require_once 'header.php';
 require_once 'clases/OrderManager.php';
+require_once 'clases/Tracker.php'; // Incluir la clase Tracker
+
+$tracker = new Tracker();
+$userId = $_SESSION['user_id'] ?? 0;
+$referrer = $_SERVER['HTTP_REFERER'] ?? null;
+$requestUri = $_SERVER['REQUEST_URI'];
+
+// Lista de extensiones a ignorar
+$ignoredExtensions = ['.ico', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+$isStaticAsset = false;
+foreach ($ignoredExtensions as $ext) {
+    if (str_ends_with($requestUri, $ext)) {
+        $isStaticAsset = true;
+        break;
+    }
+}
+
+$metId = 0;
+if (!$isStaticAsset && isset($_COOKIE['cookie_accepted'])) {
+    $metId = $tracker->trackPageView($userId, $requestUri, null, $referrer);
+}
 
 $orderManager = new OrderManager();
 
@@ -47,7 +68,12 @@ $cartTotal = $orderManager->getCartTotal();
     <?php endif; ?>
 
     <?php if ($saleId): // Si la compra fue exitosa ?>
-        <p data-translate-key="purchase_success_message"><?= Translator::get('purchase_success_message') ?? 'Tu compra con ID de Venta' ?> <strong><?= $saleId ?></strong> <?= Translator::get('purchase_success_message_part2') ?? 'ha sido completada. Puedes' ?> <a href="order_details.php?id=<?= $saleId ?>" data-translate-key="view_order_details_link"><?= Translator::get('view_order_details_link') ?? 'ver los detalles de tu pedido aquí' ?></a>.</p>
+        <p data-translate-key="purchase_success_message"><?= Translator::get('purchase_success_message') ?? 'Tu compra con ID de Venta' ?> <strong><?= $saleId ?></strong> <?= Translator::get('purchase_success_message_part2') ?? 'ha sido completada.' ?></p>
+        <p>
+            <a href="order_details.php?id=<?= $saleId ?>" data-translate-key="view_order_details_link"><?= Translator::get('view_order_details_link') ?? 'Ver los detalles de tu pedido aquí' ?></a>
+            <span class="mx-2">|</span>
+            <a href="admin/invoice.php?saleId=<?= $saleId ?>" target="_blank" class="btn btn-primary btn-sm" data-translate-key="download_invoice_button"><?= Translator::get('download_invoice_button') ?? 'Descargar Factura (PDF)' ?></a>
+        </p>
         <p><a href="index.php" class="btn btn-secondary" data-translate-key="back_to_main_page"><?= Translator::get('back_to_main_page') ?? 'Volver a la página principal' ?></a></p>
     <?php else: // Muestra el resumen del carrito antes de confirmar ?>
         <h3 data-translate-key="order_summary"><?= Translator::get('order_summary') ?? 'Resumen del Pedido' ?></h3>
@@ -92,4 +118,48 @@ $cartTotal = $orderManager->getCartTotal();
 <?php require_once 'footer.php'; ?>
 
 </body>
+
+<script>
+    (function() {
+        let startTime = Date.now();
+        let metId = parseInt(<?= $metId ?>);
+        console.log('Page loaded. Initial metId:', metId);
+
+        function sendPagePermanence() {
+            let endTime = Date.now();
+            let permanence = endTime - startTime; // in milliseconds
+            console.log('Attempting to send page permanence. Current metId:', metId, 'Permanence:', permanence, 'ms');
+
+            let cookieAccepted = document.cookie.includes('cookie_accepted');
+            console.log('Cookie Accepted:', cookieAccepted);
+
+            if (cookieAccepted && !isNaN(metId) && metId > 0 && permanence > 0) {
+                console.log('Sending page permanence AJAX for met_id=' + metId + ', permanence=' + permanence + 'ms');
+                fetch('track_page_duration.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        met_id: metId,
+                        permanence: permanence
+                    }),
+                }).then(response => {
+                    // console.log('Page permanence tracking sent:', response);
+                }).catch(error => {
+                    console.error('Error sending page permanence:', error);
+                });
+            }
+        }
+
+        window.addEventListener('beforeunload', sendPagePermanence);
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                sendPagePermanence();
+            } else {
+                startTime = Date.now();
+            }
+        });
+    })();
+</script>
 </html>

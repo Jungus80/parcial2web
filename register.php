@@ -2,6 +2,27 @@
 session_start();
 require_once 'dbconexion.php';
 require_once 'clases/Seguridad.php';
+require_once 'clases/Tracker.php'; // Incluir la clase Tracker
+
+$tracker = new Tracker();
+$userId = $_SESSION['user_id'] ?? 0;
+$referrer = $_SERVER['HTTP_REFERER'] ?? null;
+$requestUri = $_SERVER['REQUEST_URI'];
+
+// Lista de extensiones a ignorar
+$ignoredExtensions = ['.ico', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+$isStaticAsset = false;
+foreach ($ignoredExtensions as $ext) {
+    if (str_ends_with($requestUri, $ext)) {
+        $isStaticAsset = true;
+        break;
+    }
+}
+
+$metId = 0;
+if (!$isStaticAsset && isset($_COOKIE['cookie_accepted'])) {
+    $metId = $tracker->trackPageView($userId, $requestUri, null, $referrer);
+}
 
 $db = new DB();
 $conn = $db->getConnection();
@@ -49,6 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <?php require_once 'header.php'; ?>
+<script>
+    // JavaScript para pasar metId a la parte de script del footer
+    window.currentMetId = <?= $metId ?>;
+</script>
+<style>
+    .auth-links a[href="cart.php"] {
+        display: none;
+    }
+</style>
 <div class="container">
     <h2 data-translate-key="register_title"><?= Translator::get('register_title') ?? 'Registro de Usuario' ?></h2>
     <?php if ($message): 
@@ -81,3 +111,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p data-translate-key="already_have_account"><?= Translator::get('already_have_account') ?? '¿Ya tienes una cuenta?' ?> <a href="login.php" class="btn btn-info btn-sm" data-translate-key="login_link_text"><?= Translator::get('login_link_text') ?? 'Inicia Sesión aquí' ?></a>.</p>
 </div>
 <?php require_once 'footer.php'; ?>
+
+<script>
+    (function() {
+        let startTime = Date.now();
+        let metId = window.currentMetId; // Usar la variable global o pasarla directamente
+        console.log('Page loaded. Initial metId:', metId);
+
+        function sendPagePermanence() {
+            let endTime = Date.now();
+            let permanence = endTime - startTime; // in milliseconds
+            console.log('Attempting to send page permanence. Current metId:', metId, 'Permanence:', permanence, 'ms');
+
+            let cookieAccepted = document.cookie.includes('cookie_accepted');
+            console.log('Cookie Accepted:', cookieAccepted);
+
+            if (cookieAccepted && !isNaN(metId) && metId > 0 && permanence > 0) {
+                console.log('Sending page permanence AJAX for met_id=' + metId + ', permanence=' + permanence + 'ms');
+                fetch('track_page_duration.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        met_id: metId,
+                        permanence: permanence
+                    }),
+                }).then(response => {
+                    // console.log('Page permanence tracking sent:', response);
+                }).catch(error => {
+                    console.error('Error sending page permanence:', error);
+                });
+            }
+        }
+
+        window.addEventListener('beforeunload', sendPagePermanence);
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                sendPagePermanence();
+            }
+        });
+    })();
+</script>

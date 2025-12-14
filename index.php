@@ -25,7 +25,22 @@ $pagina = new PaginaPrincipal();
 $userId = $_SESSION['user_id'] ?? 0;
 $tracker = new Tracker();
 $referrer = $_SERVER['HTTP_REFERER'] ?? null;
-$tracker->trackPageView($userId, $_SERVER['REQUEST_URI'], null, $referrer);
+$requestUri = $_SERVER['REQUEST_URI'];
+
+// Lista de extensiones a ignorar
+$ignoredExtensions = ['.ico', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg'];
+$isStaticAsset = false;
+foreach ($ignoredExtensions as $ext) {
+    if (str_ends_with($requestUri, $ext)) {
+        $isStaticAsset = true;
+        break;
+    }
+}
+
+// Solo trackear si no es un activo estático y la cookie esté aceptada
+if (!$isStaticAsset && isset($_COOKIE['cookie_accepted'])) {
+    $tracker->trackPageView($userId, $requestUri, null, $referrer);
+}
 
 ?>
 

@@ -70,7 +70,7 @@ $salesRevenue = json_encode(array_column($salesByDay, 'daily_revenue'));
         <h3 data-translate-key="most_viewed_products"><?= Translator::get('most_viewed_products') ?? 'Productos Más Vistos' ?></h3>
         <ul>
             <?php foreach ($mostViewedProducts as $product): ?>
-                <li><?= $product['pro_nombre'] ?> (<span data-translate-key="views"><?= Translator::get('views') ?? 'vistas' ?></span>: <?= $product['views'] ?>)</li>
+                <li><?= $product['pro_nombre'] ?> (<span data-translate-key="views"><?= Translator::get('views') ?? 'vistas' ?></span>: <?= $product['total_views'] ?>)</li>
             <?php endforeach; ?>
         </ul>
 

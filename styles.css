@@ -225,20 +225,56 @@ table {
 
 th, td {
     border: 1px solid var(--border-color);
-    padding: 12px 15px;
+    padding: 15px 20px; /* Increased padding */
     text-align: left;
+    vertical-align: middle; /* Align content in middle */
 }
 
-th {
+.cart-table th {
     background-color: var(--light-color);
     font-weight: 600;
     color: var(--dark-color);
     text-transform: uppercase;
     font-size: 0.9em;
+    text-align: center; /* Center align all headers by default */
+}
+
+.cart-table th:first-child, /* first empty header for image*/
+.cart-table td:first-child { /* Image column */
+    text-align: center;
+}
+
+.cart-table th:nth-child(2), /* Product column */
+.cart-table td:nth-child(2) {
+    text-align: left;
+}
+
+.cart-table th:last-child, /* Actions column */
+.cart-table td:last-child {
+    text-align: center;
+}
+
+.cart-table img {
+    display: block; /* Ensures proper centering with margin auto */
+    margin: 0 auto;
 }
 
 tr:nth-child(even) {
     background-color: #f8f8f8;
+}
+
+/* Style for the total row in the footer */
+.cart-table tfoot td {
+    text-align: right; /* Align footer text to the right */
+    font-weight: bold;
+}
+
+.cart-table tfoot td:last-child {
+    text-align: right; /*Align the total value to the right*/
+}
+
+.cart-table tfoot tr {
+    background-color: var(--light-color);
 }
 
 tr:hover {
@@ -326,9 +362,23 @@ tr:hover {
 }
 
 /* Language Selector */
-.language-selector {
-    float: right;
+.main-header {
+    padding: 15px 20px;
+    background-color: #fff;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.language-and-auth {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 15px;
+}
+
+.language-selector {
+    /* float: right; remove float as flexbox handles positioning */
+    margin-bottom: 0; /* Adjust margin for flex alignment */
     padding: 8px 12px;
     border-radius: 8px;
     background-color: var(--light-color);
@@ -337,6 +387,12 @@ tr:hover {
     align-items: center;
     gap: 10px;
     border: 1px solid var(--border-color);
+}
+
+.auth-links {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .language-selector label {
@@ -512,4 +568,17 @@ footer a:hover {
 
 .metric-card p.revenue {
     color: var(--success-color); /* Color específico para ingresos */
+}
+
+
+.table-responsive{
+  width: 100%;
+  overflow-x: auto;
+}
+
+.cart-table{
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 auto; /* Center the table horizontally */
+  /* min-width: 720px; Removed fixed min-width to allow better responsiveness */
 }
