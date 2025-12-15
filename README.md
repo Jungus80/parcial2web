@@ -184,18 +184,7 @@ server {
 
 ---
 
-## 🗺️ Roadmap / Mejoras Futuras
-
-- ✅ Internacionalización (soporte en `/lang`)
-- 🕓 Carrito persistente con cookies/sesiones
-- 📈 Gráficos interactivos con Chart.js
-- ☁️ Dockerización del entorno
-- 🔒 Autenticación JWT (API futura)
-
----
-
 ## 📄 Licencia y Créditos
 
-Desarrollado por **Nicolás Jung**  
 Proyecto académico - 2025  
 Licencia: [MIT](LICENSE)
