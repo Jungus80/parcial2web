@@ -52,7 +52,7 @@ if (!$isStaticAsset && isset($_COOKIE['cookie_accepted'])) {
     ?>
 
     <h2 data-translate-key="productos_destacados"><?= Translator::get('productos_destacados') ?? 'Productos Destacados' ?></h2>
-    <div class="product-list">
+    <div class="product-grid">
         <?php
         require_once 'clases/ProductManager.php';
         $productManager = new ProductManager();
@@ -60,17 +60,81 @@ if (!$isStaticAsset && isset($_COOKIE['cookie_accepted'])) {
 
         if (!empty($products)) {
             foreach ($products as $product) {
-                echo '<div>';
-                echo '<h3><a href="product_detail.php?id=' . $product['pro_id'] . '">' . $product['pro_nombre'] . '</a></h3>';
-                echo '<p><strong data-translate-key="price">'. Translator::get('price') . ':</strong> $' . $product['pro_precio_unitario'] . '</p>';
-                echo '<p><strong data-translate-key="stock">'. Translator::get('stock') . ':</strong> ' . $product['pro_cantidad_stock'] . '</p>';
+                $descripcionCorta = mb_strimwidth($product['pro_descripcion'] ?? '', 0, 100, '...');
+                $imagen = !empty($product['pro_imagen_url']) ? $product['pro_imagen_url'] : 'https://via.placeholder.com/300x200?text=Sin+imagen';
+                
+                echo '<div class="product-card">';
+                echo '<img src="' . htmlspecialchars($imagen) . '" alt="' . htmlspecialchars($product['pro_nombre']) . '" class="product-image">';
+                echo '<div class="product-info">';
+                echo '<h3 class="product-title">' . htmlspecialchars($product['pro_nombre']) . '</h3>';
+                echo '<p class="product-description">' . htmlspecialchars($descripcionCorta) . '</p>';
+                echo '<p class="product-price"><strong>$' . number_format($product["pro_precio_unitario"], 2) . '</strong></p>';
+                echo '<a href="product_detail.php?id=' . $product['pro_id'] . '" class="btn btn-primary">Ver Detalle</a>';
+                echo '</div>';
                 echo '</div>';
             }
         } else {
-            echo '<p data-translate-key="no_products_available">'. Translator::get('no_products_available') .'</p>';
+            echo '<p data-translate-key="no_products_available">' . Translator::get('no_products_available') . '</p>';
         }
         ?>
     </div>
+
+    <style>
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .product-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .product-info {
+            padding: 15px;
+            text-align: center;
+        }
+        .product-title {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .product-description {
+            font-size: 0.95rem;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .product-price {
+            font-size: 1.1rem;
+            color: #007bff;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .btn.btn-primary {
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            display: inline-block;
+            transition: background-color 0.2s ease;
+        }
+        .btn.btn-primary:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </div>
 <?php require_once 'footer.php'; ?>
 

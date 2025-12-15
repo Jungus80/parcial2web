@@ -60,11 +60,52 @@ if ($saleId > 0) {
     <?php if ($errorMessage): ?>
         <p class="error"><?= $errorMessage ?></p>
     <?php elseif ($sale): ?>
-        <p data-translate-key="sale_id">ID de Venta: <strong><?= $sale['ven_id'] ?></strong></p>
-        <p data-translate-key="user_label">Usuario: <?= $sale['usu_nombre'] ?></p>
-        <p data-translate-key="date_label">Fecha: <?= $sale['ven_fecha'] ?></p>
-        <p data-translate-key="status_label">Estado: <?= $sale['ven_estado'] ?></p>
-        <p data-translate-key="total_label">Total: $<?= number_format($sale['ven_total'], 2) ?></p>
+        <div class="order-header-card">
+            <h3>Detalles de la Orden</h3>
+            <table class="order-info">
+                <tr><th>ID de Venta</th><td><?= htmlspecialchars($sale['ven_id']) ?></td></tr>
+                <tr><th>Cliente</th><td><?= htmlspecialchars($sale['usu_nombre']) ?></td></tr>
+                <tr><th>Fecha</th><td><?= htmlspecialchars($sale['ven_fecha']) ?></td></tr>
+                <tr><th>Estado</th><td><?= htmlspecialchars($sale['ven_estado']) ?></td></tr>
+                <tr><th>Total</th><td>$<?= number_format((float)$sale['ven_total'], 2) ?></td></tr>
+            </table>
+        </div>
+
+        <style>
+        .order-header-card {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .order-header-card h3 {
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+        .order-info {
+            width: 100%;
+            max-width: 600px;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .order-info th {
+            background: #f8f9fa;
+            text-align: left;
+            padding: 10px;
+            width: 35%;
+            color: #333;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .order-info td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            color: #444;
+        }
+        </style>
         
         <?php if (!$saleIntegrityStatus || $sale['ven_modificado']): ?>
             <p class="error"><span data-translate-key="sale_integrity_warning">⚠️ ¡Advertencia: Venta modificada o integridad comprometida!</span></p>
@@ -72,29 +113,85 @@ if ($saleId > 0) {
             <p class="message"><span data-translate-key="sale_integrity_verified">✔ Integridad de la venta verificada.</span></p>
         <?php endif; ?>
 
-        <h3 data-translate-key="products_in_order_title"><?= Translator::get('products_in_order_title') ?? 'Productos en el Pedido:' ?></h3>
-        <table>
-            <thead>
-                <tr>
-                    <th data-translate-key="product_header"><?= Translator::get('product_header') ?? 'Producto' ?></th>
-                    <th data-translate-key="quantity_header"><?= Translator::get('quantity_header') ?? 'Cantidad' ?></th>
-                    <th data-translate-key="sale_unit_price_header"><?= Translator::get('sale_unit_price_header') ?? 'Precio Unidad Venta' ?></th>
-                    <th data-translate-key="subtotal_header"><?= Translator::get('subtotal_header') ?? 'Subtotal' ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($sale['details'] as $item): ?>
-                <tr>
-                    <td><?= $item['pro_nombre'] ?></td>
-                    <td><?= $item['dev_cantidad'] ?></td>
-                    <td>$<?= number_format($item['dev_precio_unidad_venta'], 2) ?></td>
-                    <td>$<?= number_format($item['dev_subtotal'], 2) ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-        <p><a href="admin/invoice.php?saleId=<?= $sale['ven_id'] ?>" target="_blank" class="btn btn-primary" data-translate-key="download_invoice_button"><?= Translator::get('download_invoice_button') ?? 'Descargar Factura (PDF)' ?></a></p>
+        <h3 data-translate-key="products_in_order_title"><?= Translator::get('products_in_order_title') ?? 'Artículos de tu Orden:' ?></h3>
 
+        <?php if (!empty($sale['details'])): ?>
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unidad</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($sale['details'] as $item): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($item['pro_nombre']) ?></td>
+                            <td><?= (int)$item['dev_cantidad'] ?></td>
+                            <td>$<?= number_format((float)$item['dev_precio_unidad_venta'], 2) ?></td>
+                            <td>$<?= number_format((float)$item['dev_subtotal'], 2) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p class="empty-order">No se encontraron productos en esta orden.</p>
+        <?php endif; ?>
+
+        <div class="order-summary">
+            <h4>Resumen de la Orden</h4>
+            <p><strong>Total:</strong> $<?= number_format((float)$sale['ven_total'], 2) ?></p>
+            <p><strong>Estado:</strong> <?= htmlspecialchars($sale['ven_estado']) ?></p>
+            <p><strong>Fecha:</strong> <?= htmlspecialchars($sale['ven_fecha']) ?></p>
+        </div>
+
+        <a href="admin/invoice.php?saleId=<?= $sale['ven_id'] ?>" target="_blank" class="btn btn-primary">Descargar Factura (PDF)</a>
+
+        <style>
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .cart-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .cart-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .empty-order {
+            margin-top: 20px;
+            color: #777;
+            font-style: italic;
+        }
+        .order-summary {
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        </style>
     <?php endif; ?>
     <p><a href="index.php" class="btn btn-secondary" data-translate-key="back_to_main_page"><?= Translator::get('back_to_main_page') ?? 'Volver a la página principal' ?></a></p>
 </div>

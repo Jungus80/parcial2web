@@ -10,6 +10,19 @@ class MetricsManager {
         $this->db->getConnection();
     }
 
+    public function getTopSellingProducts(int $limit = 5): array {
+        $query = "SELECT p.pro_nombre, p.pro_imagen_url, SUM(dv.dev_cantidad) AS total_vendidos
+                  FROM Detalle_venta dv
+                  JOIN Producto p ON dv.dev_producto = p.pro_id
+                  GROUP BY p.pro_id
+                  ORDER BY total_vendidos DESC
+                  LIMIT ?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getTotalUsers(): int {
         $query = "SELECT COUNT(*) FROM Usuario";
         $stmt = $this->db->query($query);
@@ -109,6 +122,78 @@ class MetricsManager {
             return 0.0;
         }
         return ($this->getGrossProfit() / $totalRevenue) * 100;
+    }
+
+    /**
+     * MÉTODOS AGREGADOS PARA PANEL DE MÉTRICAS (metrics_overview.php)
+     */
+
+    public function getDailyViews(int $days = 7): array {
+        $query = "SELECT DATE(met_fecha_visita) AS date, COUNT(*) AS views
+                  FROM Metrica_navegacion
+                  WHERE met_fecha_visita >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                  GROUP BY DATE(met_fecha_visita)
+                  ORDER BY date ASC";
+        $stmt = $this->db->query($query, [$days]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAverageDuration(): float {
+        $query = "SELECT COALESCE(AVG(met_tiempo_visita), 0) / 60000 FROM Metrica_navegacion WHERE met_tiempo_visita > 0";
+        // convertir de milisegundos a minutos (manejo seguro si no hay datos)
+        $stmt = $this->db->query($query);
+        return round((float)$stmt->fetchColumn(), 2);
+    }
+
+    public function getTopProducts(int $limit = 5): array {
+        $query = "SELECT p.pro_nombre, COUNT(o.obs_producto) AS visitas
+                  FROM Observa o
+                  JOIN Producto p ON o.obs_producto = p.pro_id
+                  GROUP BY p.pro_id
+                  ORDER BY visitas DESC
+                  LIMIT ?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getUniqueUsersCount(): int {
+        $query = "SELECT COUNT(DISTINCT met_usuario) FROM Metrica_navegacion";
+        $stmt = $this->db->query($query);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getReturningUsersCount(): int {
+        $query = "SELECT COUNT(*) FROM (
+                    SELECT met_usuario 
+                    FROM Metrica_navegacion 
+                    WHERE met_usuario IS NOT NULL 
+                    GROUP BY met_usuario 
+                    HAVING COUNT(*) > 1
+                  ) AS sub";
+        $stmt = $this->db->query($query);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getTotalPageViews(): int {
+        $query = "SELECT COUNT(*) FROM Metrica_navegacion";
+        $stmt = $this->db->query($query);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getMostVisitedPages(int $limit = 10, int $days = 7): array {
+        $query = "SELECT met_pagina_url AS url, COUNT(*) AS visitas
+                  FROM Metrica_navegacion
+                  WHERE met_fecha_visita >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                  GROUP BY met_pagina_url
+                  ORDER BY visitas DESC
+                  LIMIT ?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bindValue(1, $days, PDO::PARAM_INT);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 

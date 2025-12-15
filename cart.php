@@ -310,14 +310,107 @@ $cartTotal = $cartManager->getCartTotal();
         </table>
         </div>
 
-        <p class="text-right">
-            <a href="checkout.php"
-               class="btn btn-success"
-               <?= $isCartExpired || empty($cartItems) ? 'disabled' : '' ?>
-               data-translate-key="checkout_button">
-                <?= Translator::get('checkout_button') ?? 'Finalizar Compra' ?>
-            </a>
-        </p>
+        <div class="cart-summary">
+            <h3>Resumen del Carrito</h3>
+            <p class="cart-total"><strong>Total:</strong> $<?= number_format((float)$cartTotal, 2) ?></p>
+            <div class="cart-actions">
+                <a href="checkout.php" 
+                   class="btn-primary" 
+                   <?= $isCartExpired || empty($cartItems) ? 'disabled' : '' ?>>
+                    Finalizar Compra
+                </a>
+                <a href="index.php" class="btn-secondary">Seguir Comprando</a>
+            </div>
+        </div>
+
+        <style>
+        .cart-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+        }
+        .cart-summary {
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+        .cart-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-primary, .btn-secondary {
+            border: none;
+            padding: 10px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #fff;
+            transition: background 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .cart-table th {
+            background: #f8f9fa;
+            text-align: left;
+            padding: 12px;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .cart-table td {
+            padding: 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid #eee;
+        }
+        .cart-table img {
+            width: 70px;
+            height: 70px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        .cart-table input[type="number"] {
+            width: 60px;
+            text-align: center;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-danger:hover {
+            background: #b52a37;
+        }
+        @media(max-width: 768px) {
+            .cart-table, .cart-table thead { display: none; }
+            .cart-table tr, .cart-table td { display: block; width: 100%; }
+            .cart-table tr { margin-bottom: 15px; border: 1px solid #eee; padding: 10px; border-radius: 8px; }
+            .cart-summary { text-align: center; }
+            .cart-actions { justify-content: center; }
+        }
+        </style>
     <?php endif; ?>
 
     <p>

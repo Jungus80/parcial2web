@@ -24,6 +24,7 @@ $totalSales = $metricsManager->getTotalSales();
 $totalRevenue = $metricsManager->getTotalRevenue();
 $mostViewedProducts = $metricsManager->getMostViewedProducts();
 $salesByDay = $metricsManager->getSalesByDay();
+$topSellingProducts = $metricsManager->getTopSellingProducts(5);
 
 // Preparar datos para Chart.js 
 $salesDates = json_encode(array_column($salesByDay, 'sale_date'));
@@ -43,36 +44,59 @@ $salesRevenue = json_encode(array_column($salesByDay, 'daily_revenue'));
         <?php include 'includes/admin_header.php'; ?>
         <p class="message"><?= $message ?></p>
 
-        <h2 data-translate-key="quick_stats"><?= Translator::get('quick_stats') ?? 'Estadísticas Rápidas' ?></h2>
-        <div class="metric-card-grid">
-            <div class="metric-card">
-                <h3 data-translate-key="registered_users"><?= Translator::get('registered_users') ?? 'Usuarios Registrados' ?></h3>
-                <p><?= $totalUsers ?></p>
+        <h2 class="dashboard-section-title">📊 Estadísticas Rápidas del Sistema</h2>
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h4>👥 Usuarios Registrados</h4>
+                <p class="dashboard-metric"><?= $totalUsers ?></p>
             </div>
-            <div class="metric-card">
-                <h3 data-translate-key="active_users_24h"><?= Translator::get('active_users_24h') ?? 'Usuarios Activos (24h)' ?></h3>
-                <p><?= $activeUsers ?></p>
+            <div class="dashboard-card">
+                <h4>🕒 Usuarios Activos (Últimas 24h)</h4>
+                <p class="dashboard-metric"><?= $activeUsers ?></p>
             </div>
-            <div class="metric-card">
-                <h3 data-translate-key="total_products"><?= Translator::get('total_products') ?? 'Productos Totales' ?></h3>
-                <p><?= $totalProducts ?></p>
+            <div class="dashboard-card">
+                <h4>📦 Total de Productos</h4>
+                <p class="dashboard-metric"><?= $totalProducts ?></p>
             </div>
-            <div class="metric-card">
-                <h3 data-translate-key="processed_sales"><?= Translator::get('processed_sales') ?? 'Ventas Procesadas' ?></h3>
-                <p><?= $totalSales ?></p>
+            <div class="dashboard-card">
+                <h4>💰 Ventas Completadas</h4>
+                <p class="dashboard-metric"><?= $totalSales ?></p>
             </div>
-            <div class="metric-card">
-                <h3 data-translate-key="total_revenue"><?= Translator::get('total_revenue') ?? 'Ingresos Totales' ?></h3>
-                <p class="revenue">$<?= number_format($totalRevenue, 2) ?></p>
+            <div class="dashboard-card">
+                <h4>💵 Ingresos Generados</h4>
+                <p class="dashboard-metric">$<?= number_format($totalRevenue, 2) ?></p>
             </div>
         </div>
 
-        <h3 data-translate-key="most_viewed_products"><?= Translator::get('most_viewed_products') ?? 'Productos Más Vistos' ?></h3>
-        <ul>
-            <?php foreach ($mostViewedProducts as $product): ?>
-                <li><?= $product['pro_nombre'] ?> (<span data-translate-key="views"><?= Translator::get('views') ?? 'vistas' ?></span>: <?= $product['total_views'] ?>)</li>
-            <?php endforeach; ?>
-        </ul>
+        <div class="top-viewed">
+            <h3>🔥 Productos Más Vistos</h3>
+            <ul>
+                <?php foreach ($mostViewedProducts as $product): ?>
+                    <li>
+                        <div class="viewed-item">
+                            <span class="product-name"><?= htmlspecialchars($product['pro_nombre']) ?></span>
+                            <span class="view-count"><?= (int)$product['total_views'] ?> vistas</span>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+
+        <div class="top-sellers">
+            <h3>🏆 Top 5 Productos Más Vendidos</h3>
+            <ul>
+                <?php foreach ($topSellingProducts as $product): ?>
+                    <li>
+                        <div class="seller-item">
+                            <img src="<?= htmlspecialchars($product['pro_imagen_url'] ?? 'https://via.placeholder.com/50x50?text=No+Image') ?>" 
+                                alt="<?= htmlspecialchars($product['pro_nombre']) ?>">
+                            <span class="seller-name"><?= htmlspecialchars($product['pro_nombre']) ?></span>
+                            <span class="seller-count"><?= (int)$product['total_vendidos'] ?> vendidos</span>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
 
         <h3 data-translate-key="sales_by_day"><?= Translator::get('sales_by_day') ?? 'Ventas por Día (Últimos 7 días)' ?></h3>
         <canvas id="salesChart" width="600" height="300"></canvas>

@@ -61,19 +61,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $precioUnitario = (float)($_POST['pro_precio_unitario'] ?? 0.0);
     $precioCompra = isset($_POST['pro_precio_compra']) && $_POST['pro_precio_compra'] !== '' ? (float)$_POST['pro_precio_compra'] : null;
     $cantidadStock = (int)($_POST['pro_cantidad_stock'] ?? 0);
-    $disponible = isset($_POST['pro_disponible']) ? true : false;
-    $fechaEntrada = $_POST['pro_fecha_entrada'] ?? null; // Validar formato de fecha si es necesario
+    $disponible = isset($_POST['pro_disponible']) ? 1 : 0;
+    $fechaEntrada = $_POST['pro_fecha_entrada'] ?? null;
     $proveedorId = (int)($_POST['pro_proveedor'] ?? 0);
     $categoriaId = (int)($_POST['pro_categoria'] ?? 0);
+    $imagenUrl = $_POST['pro_imagen_url'] ?? null;
 
-    // Convertir 0 a null para IDs opcionales si la DB acepta NULL en FK
     $proveedorId = ($proveedorId === 0) ? null : $proveedorId;
     $categoriaId = ($categoriaId === 0) ? null : $categoriaId;
 
     if ($action === 'create') {
         if (empty($nombre) || $precioUnitario <= 0 || $cantidadStock < 0) {
             $error = 'Datos de producto incompletos o inválidos.';
-        } elseif ($productManager->createProduct($nombre, $descripcion, $precioUnitario, $precioCompra, $cantidadStock, $disponible, $fechaEntrada, $proveedorId, $categoriaId)) {
+        } elseif ($productManager->createProduct($nombre, $descripcion, $precioUnitario, $precioCompra, $cantidadStock, $disponible, $fechaEntrada, $proveedorId, $categoriaId, $imagenUrl)) {
             $message = 'Producto creado exitosamente.';
         } else {
             $error = 'Error al crear producto.';
@@ -119,7 +119,7 @@ $products = $productManager->getAllProducts();
             
             <div class="form-group">
                 <label for="pro_nombre" data-translate-key="product_name_label"><?= Translator::get('product_name_label') ?? 'Nombre del Producto' ?>:</label>
-                <input type="text" id="pro_nombre" name="pro_nombre" value="<?= $editProduct['pro_nombre'] ?? '' ?>" required minlength="3" maxlength="120" class="form-control">
+                <input type="text" id="pro_nombre" name="pro_nombre" value="<?= $editProduct['pro_nombre'] ?? 'Nuevo Producto' ?>" required minlength="3" maxlength="120" class="form-control" placeholder="Ingrese el nombre del producto">
             </div>
             <div class="form-group">
                 <label for="pro_descripcion" data-translate-key="description_label"><?= Translator::get('description_label') ?? 'Descripción' ?>:</label>
@@ -136,6 +136,10 @@ $products = $productManager->getAllProducts();
             <div class="form-group">
                 <label for="pro_cantidad_stock" data-translate-key="quantity_in_stock_label"><?= Translator::get('quantity_in_stock_label') ?? 'Cantidad en Stock' ?>:</label>
                 <input type="number" min="0" id="pro_cantidad_stock" name="pro_cantidad_stock" value="<?= $editProduct['pro_cantidad_stock'] ?? '' ?>" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="pro_imagen_url" data-translate-key="product_image_url_label"><?= Translator::get('product_image_url_label') ?? 'URL de Imagen del Producto' ?>:</label>
+                <input type="url" id="pro_imagen_url" name="pro_imagen_url" value="<?= $editProduct['pro_imagen_url'] ?? '' ?>" placeholder="https://example.com/imagen.jpg" class="form-control">
             </div>
             <div class="form-group form-check">
                 <input type="checkbox" id="pro_disponible" name="pro_disponible" <?= (($editProduct['pro_disponible'] ?? true) ? 'checked' : '') ?>>
@@ -185,6 +189,7 @@ $products = $productManager->getAllProducts();
                     <th data-translate-key="available_header"><?= Translator::get('available_header') ?? 'Disponible' ?></th>
                     <th data-translate-key="supplier_header"><?= Translator::get('supplier_header') ?? 'Proveedor' ?></th>
                     <th data-translate-key="category_header"><?= Translator::get('category_header') ?? 'Categoría' ?></th>
+                    <th data-translate-key="image_header"><?= Translator::get('image_header') ?? 'Imagen' ?></th>
                     <th data-translate-key="actions_header"><?= Translator::get('actions_header') ?? 'Acciones' ?></th>
                 </tr>
             </thead>
@@ -199,6 +204,13 @@ $products = $productManager->getAllProducts();
                     <td><?= $product['pro_disponible'] ? (Translator::get('yes') ?? 'Sí') : (Translator::get('no') ?? 'No') ?></td>
                     <td><?= $product['prv_nombre'] ?></td>
                     <td><?= $product['cat_nombre'] ?></td>
+                    <td>
+                        <?php if (!empty($product['pro_imagen_url'])): ?>
+                            <img src="<?= htmlspecialchars($product['pro_imagen_url']) ?>" alt="<?= htmlspecialchars($product['pro_nombre']) ?>" width="60" height="60" style="object-fit: cover;">
+                        <?php else: ?>
+                            <span>No Imagen</span>
+                        <?php endif; ?>
+                    </td>
                     <td class="actions">
                         <a href="products.php?action=edit&id=<?= $product['pro_id'] ?>" class="btn btn-sm btn-info" data-translate-key="edit_button"><?= Translator::get('edit_button') ?? 'Editar' ?></a> 
                         <a href="products.php?action=delete&id=<?= $product['pro_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('<?= Translator::get('confirm_delete_product') ?? '¿Estás seguro de eliminar este producto?' ?>');" data-translate-key="delete_button"><?= Translator::get('delete_button') ?? 'Eliminar' ?></a>

@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="../admin_styles.css">
 <div class="admin-header">
     <div class="admin-header-inner">
         <h1>Panel de Administración</h1>
@@ -10,6 +11,7 @@
                 <li><a href="suppliers.php">Proveedores</a></li>
                 <li><a href="sales_report.php">Reporte de Ventas</a></li>
                 <li><a href="product_analytics.php">Análisis de Producto</a></li>
+                <li><a href="metrics_overview.php">Métricas</a></li>
                 <li><a href="ventas.php">Ventas</a></li>
                 <li><a href="../logout.php" class="btn btn-danger btn-sm">Cerrar Sesión</a></li>
             </ul>
