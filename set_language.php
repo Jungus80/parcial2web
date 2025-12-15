@@ -1,33 +1,18 @@
 <?php
 session_start();
 
-require_once 'clases/Translator.php';
-
-header('Content-Type: application/json');
-
-$response = ['success' => false, 'message' => 'Invalid request'];
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['lang'])) {
-    $langCode = $_POST['lang'];
-    $userId = $_SESSION['user_id'] ?? null;
+    $lang = $_POST['lang'];
+    $_SESSION['lang'] = $lang;
+    setcookie('lang', $lang, time() + (86400 * 30), '/');
 
-    // Set language cookie
-    if (Translator::setLanguageCookie($langCode)) {
-        $response['success'] = true;
-        $response['message'] = 'Language cookie set.';
-
-        // If user is logged in, update their preference in the DB
-        if ($userId && Translator::updateUserLanguage($userId, $langCode)) {
-            $response['message'] .= ' User language preference updated.';
-        } elseif ($userId) {
-            $response['success'] = false;
-            $response['message'] = 'Failed to update user language preference.';
-        }
-    } else {
-        $response['message'] = 'Invalid language code.';
-    }
+    // Redirigir a la página anterior en lugar de devolver JSON
+    $redirect = $_SERVER['HTTP_REFERER'] ?? '/admin/index.php';
+    header("Location: $redirect");
+    exit;
 }
 
-echo json_encode($response);
-exit();
+// En caso de acceso directo sin POST
+header("Location: /admin/index.php");
+exit;
 ?>
