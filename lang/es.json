@@ -190,5 +190,6 @@
     "cookies_users_label": "Usuarios con Cookies Aceptadas",
     "cookies_total_visits_label": "Total de Visitas",
     "cookies_avg_time_label": "Tiempo Promedio (s)",
-    "cookies_most_visited_label": "Páginas Más Visitadas (Usuarios con Cookies)"
+    "cookies_most_visited_label": "Páginas Más Visitadas (Usuarios con Cookies)",
+    "cookies_pages_chart_title": "Páginas más visitadas (usuarios con cookies)"
 }
