@@ -263,7 +263,24 @@ $cartTotal = $cartManager->getCartTotal();
 
                         <td><?= htmlspecialchars($item['pro_nombre']) ?></td>
 
-                        <td>$<?= number_format((float)$item['pro_precio_unitario'], 2) ?></td>
+                        <td>
+                            <?php if (!empty($item['pro_precio_oferta']) && $item['pro_precio_oferta'] > 0): ?>
+                                <span style="text-decoration: line-through; color: gray;">
+                                    $<?= number_format((float)$item['pro_precio_unitario'], 2) ?>
+                                </span>
+                                <strong style="color: red; margin-left: 5px;">
+                                    $<?= number_format((float)$item['pro_precio_oferta'], 2) ?>
+                                </strong>
+                                <?php 
+                                $descuento = round(100 * (1 - ($item['pro_precio_oferta'] / $item['pro_precio_unitario'])));
+                                ?>
+                                <span style="color: green; margin-left: 5px;">
+                                    (<?= $descuento ?>% OFF)
+                                </span>
+                            <?php else: ?>
+                                $<?= number_format((float)$item['pro_precio_unitario'], 2) ?>
+                            <?php endif; ?>
+                        </td>
 
                         <td>
                             <form action="cart.php" method="post" class="form-inline">
@@ -280,7 +297,12 @@ $cartTotal = $cartManager->getCartTotal();
                         </td>
 
                         <td>
-                            $<?= number_format(((int)$item['dca_cantidad']) * ((float)$item['pro_precio_unitario']), 2) ?>
+                            <?php 
+                                $precio = (!empty($item['pro_precio_oferta']) && $item['pro_precio_oferta'] > 0) 
+                                    ? $item['pro_precio_oferta'] 
+                                    : $item['pro_precio_unitario'];
+                            ?>
+                            $<?= number_format(((int)$item['dca_cantidad']) * ((float)$precio), 2) ?>
                         </td>
 
                         <td>

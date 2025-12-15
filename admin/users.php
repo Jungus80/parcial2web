@@ -103,7 +103,7 @@ $users = $userManager->getAllUsers();
 <body>
     <?php include 'includes/admin_header.php'; // Header del panel de administración ?>
     <div class="admin-container">
-        <h2 data-translate-key="user_management_title"><?= Translator::get('user_management_title') ?? 'Administración de Usuarios' ?></h2>
+        <h2>Gestión de Usuarios</h2>
 
         <?php if ($message): ?>
             <p class="message success-message"><?= $message ?></p>
@@ -112,52 +112,52 @@ $users = $userManager->getAllUsers();
             <p class="error error-message"><?= $error ?></p>
         <?php endif; ?>
 
-        <h3 data-translate-key="<?= $editUser ? 'edit_user_title' : 'create_new_user_title' ?>"><?= $editUser ? (Translator::get('edit_user_title') ?? 'Editar Usuario') : (Translator::get('create_new_user_title') ?? 'Crear Nuevo Usuario') ?></h3>
+        <h3><?= $editUser ? 'Editar Usuario' : 'Registrar Nuevo Usuario' ?></h3>
         <form action="users.php" method="POST">
             <input type="hidden" name="action" value="<?= $editUser ? 'update' : 'create' ?>">
             <input type="hidden" name="usu_id" value="<?= $editUser['usu_id'] ?? '' ?>">
             
             <div class="form-group">
-                <label for="usu_nombre" data-translate-key="username_label"><?= Translator::get('username_label') ?? 'Nombre de Usuario' ?>:</label>
+                <label for="usu_nombre">Nombre de Usuario:</label>
                 <input type="text" id="usu_nombre" name="usu_nombre" value="<?= $editUser['usu_nombre'] ?? '' ?>" required minlength="3" maxlength="80" class="form-control">
             </div>
             <div class="form-group">
-                <label for="usu_email" data-translate-key="email_label"><?= Translator::get('email_label') ?? 'Email' ?>:</label>
+                <label for="usu_email">Correo Electrónico:</label>
                 <input type="email" id="usu_email" name="usu_email" value="<?= $editUser['usu_email'] ?? '' ?>" required maxlength="120" class="form-control">
             </div>
             <div class="form-group">
-                <label for="usu_password" data-translate-key="password_label"><?= Translator::get('password_label') ?? 'Contraseña' ?> (<?= Translator::get('leave_blank_to_not_change') ?? 'dejar en blanco para no cambiar' ?>):</label>
+                <label for="usu_password">Contraseña (dejar en blanco para no cambiarla):</label>
                 <input type="password" id="usu_password" name="usu_password" class="form-control" <?= $editUser ? '' : 'required' ?> minlength="8" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?![.\s]).{8,}" title="Debe contener al menos un número y una letra mayúscula y minúscula, y al menos un carácter especial, y al menos 8 o más caracteres">
-                <?php if (!$editUser): ?><small class="form-text" data-translate-key="password_requirements"><?= Translator::get('password_requirements') ?? 'Mínimo 8 caracteres, incluyendo mayúsculas, minúsculas, números y símbolos especiales.' ?></small><?php endif; ?>
+                <?php if (!$editUser): ?><small class="form-text">Mínimo 8 caracteres, incluyendo mayúsculas, minúsculas, números y símbolos especiales.</small><?php endif; ?>
             </div>
             <div class="form-group">
-                <label for="usu_rol" data-translate-key="role_label"><?= Translator::get('role_label') ?? 'Rol' ?>:</label>
+                <label for="usu_rol">Rol:</label>
                 <select id="usu_rol" name="usu_rol" required class="form-control">
-                    <option value="cliente" <?= (($editUser['usu_rol'] ?? '') === 'cliente') ? 'selected' : '' ?> data-translate-key="client_role"><?= Translator::get('client_role') ?? 'Cliente' ?></option>
-                    <option value="admin" <?= (($editUser['usu_rol'] ?? '') === 'admin') ? 'selected' : '' ?> data-translate-key="admin_role"><?= Translator::get('admin_role') ?? 'Administrador' ?></option>
+                    <option value="cliente" <?= (($editUser['usu_rol'] ?? '') === 'cliente') ? 'selected' : '' ?>>Cliente</option>
+                    <option value="admin" <?= (($editUser['usu_rol'] ?? '') === 'admin') ? 'selected' : '' ?>>Administrador</option>
                 </select>
             </div>
             <div class="form-group form-check">
                 <input type="checkbox" id="usu_activo" name="usu_activo" <?= (($editUser['usu_activo'] ?? true) ? 'checked' : '') ?>>
-                <label class="form-check-label" for="usu_activo" data-translate-key="active_label"><?= Translator::get('active_label') ?? 'Activo' ?></label>
+                <label class="form-check-label" for="usu_activo">Estado Activo</label>
             </div>
             <div class="form-group">
-                <button type="submit" class="btn btn-primary" data-translate-key="<?= $editUser ? 'update_user_button' : 'create_user_button' ?>"><?= $editUser ? (Translator::get('update_user_button') ?? 'Actualizar Usuario') : (Translator::get('create_user_button') ?? 'Crear Usuario') ?></button>
-                <?php if ($editUser): ?><a href="users.php" class="btn btn-secondary" data-translate-key="cancel_edit_button"><?= Translator::get('cancel_edit_button') ?? 'Cancelar Edición' ?></a><?php endif; ?>
+                <button type="submit" class="btn btn-primary"><?= $editUser ? 'Actualizar Usuario' : 'Registrar Usuario' ?></button>
+                <?php if ($editUser): ?><a href="users.php" class="btn btn-secondary">Cancelar Edición</a><?php endif; ?>
             </div>
         </form>
 
-        <h3 data-translate-key="user_list_title"><?= Translator::get('user_list_title') ?? 'Lista de Usuarios' ?></h3>
+        <h3>Lista de Usuarios</h3>
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th data-translate-key="username_header"><?= Translator::get('username_header') ?? 'Nombre' ?></th>
-                    <th data-translate-key="email_header"><?= Translator::get('email_header') ?? 'Email' ?></th>
-                    <th data-translate-key="role_header"><?= Translator::get('role_header') ?? 'Rol' ?></th>
-                    <th data-translate-key="active_header"><?= Translator::get('active_header') ?? 'Activo' ?></th>
-                    <th data-translate-key="registration_date_header"><?= Translator::get('registration_date_header') ?? 'Registro' ?></th>
-                    <th data-translate-key="actions_header"><?= Translator::get('actions_header') ?? 'Acciones' ?></th>
+                    <th>Alias</th>
+                    <th>Correo Electrónico</th>
+                    <th>Permisos</th>
+                    <th>Activo</th>
+                    <th>Fecha de Registro</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -170,8 +170,8 @@ $users = $userManager->getAllUsers();
                     <td><?= $user['usu_activo'] ? (Translator::get('yes') ?? 'Sí') : (Translator::get('no') ?? 'No') ?></td>
                     <td><?= $user['usu_fecha_registro'] ?></td>
                     <td class="actions">
-                        <a href="users.php?action=edit&id=<?= $user['usu_id'] ?>" class="btn btn-sm btn-info" data-translate-key="edit_button"><?= Translator::get('edit_button') ?? 'Editar' ?></a> 
-                        <a href="users.php?action=delete&id=<?= $user['usu_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('<?= Translator::get('confirm_delete_user') ?? '¿Estás seguro de eliminar este usuario?' ?>');" data-translate-key="delete_button"><?= Translator::get('delete_button') ?? 'Eliminar' ?></a>
+                        <a href="users.php?action=edit&id=<?= $user['usu_id'] ?>" class="btn btn-sm btn-info">Editar</a> 
+                        <a href="users.php?action=delete&id=<?= $user['usu_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de eliminar este usuario?');">Eliminar</a>
                     </td>
                 </tr>
                 <?php endforeach; ?>

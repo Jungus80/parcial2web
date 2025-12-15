@@ -332,7 +332,19 @@ tr:hover {
     border: 1px solid var(--border-color);
 }
 
-.product-detail .price {
+.product-detail .precio-original {
+  text-decoration: line-through;
+  color: gray;
+  margin-right: 8px;
+}
+
+.precio-oferta {
+  color: red;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.price {
     font-size: 1.8em;
     color: var(--primary-color);
     font-weight: bold;

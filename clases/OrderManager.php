@@ -44,12 +44,17 @@ class OrderManager {
                     error_log("Stock insuficiente para producto: " . $item['pro_nombre']);
                     return null; // Stock insuficiente o producto no encontrado
                 }
-                $subtotal = $item['dca_cantidad'] * $product['pro_precio_unitario'];
+                // Determinar precio final tomando en cuenta oferta activa
+                $precioFinal = (!empty($product['pro_precio_oferta']) && $product['pro_precio_oferta'] > 0)
+                    ? $product['pro_precio_oferta']
+                    : $product['pro_precio_unitario'];
+
+                $subtotal = $item['dca_cantidad'] * $precioFinal;
                 $totalVenta += $subtotal;
                 $detailsForHash[] = [
                     'pro_id' => $product['pro_id'],
                     'cantidad' => $item['dca_cantidad'],
-                    'precio_unidad_venta' => $product['pro_precio_unitario'],
+                    'precio_unidad_venta' => $precioFinal,
                     'subtotal' => $subtotal
                 ];
             }

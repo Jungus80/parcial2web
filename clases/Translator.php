@@ -19,8 +19,16 @@ class Translator {
     }
 
     public static function getPreferredLanguage(): string {
-        $userId = $_SESSION['user_id'] ?? 0;
+        // Prioridad: sesión → cookie → usuario BD → español por defecto
+        if (isset($_SESSION['lang']) && self::isValidLanguage($_SESSION['lang'])) {
+            return $_SESSION['lang'];
+        }
 
+        if (isset($_COOKIE['lang']) && self::isValidLanguage($_COOKIE['lang'])) {
+            return $_COOKIE['lang'];
+        }
+
+        $userId = $_SESSION['user_id'] ?? 0;
         if ($userId > 0) {
             $query = "SELECT i.idi_nombre FROM Usuario u JOIN Idioma i ON u.usu_idioma = i.idi_id WHERE u.usu_id = ?";
             $stmt = self::$db->query($query, [$userId]);
@@ -30,11 +38,7 @@ class Translator {
             }
         }
 
-        if (isset($_COOKIE['lang']) && self::isValidLanguage($_COOKIE['lang'])) {
-            return $_COOKIE['lang'];
-        }
-
-        return 'es'; // Default language if no user preference or cookie
+        return 'es'; // Idioma por defecto
     }
 
     public static function setLanguageCookie(string $langCode) {

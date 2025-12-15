@@ -68,7 +68,16 @@ if (!$isStaticAsset && isset($_COOKIE['cookie_accepted'])) {
                 echo '<div class="product-info">';
                 echo '<h3 class="product-title">' . htmlspecialchars($product['pro_nombre']) . '</h3>';
                 echo '<p class="product-description">' . htmlspecialchars($descripcionCorta) . '</p>';
-                echo '<p class="product-price"><strong>$' . number_format($product["pro_precio_unitario"], 2) . '</strong></p>';
+                echo '<p class="product-price">';
+                if (!empty($product["pro_precio_oferta"]) && $product["pro_precio_oferta"] > 0) {
+                    $descuento = round(100 * (1 - ($product["pro_precio_oferta"] / $product["pro_precio_unitario"])));
+                    echo '<span style="text-decoration: line-through; color: gray;">$' . number_format($product["pro_precio_unitario"], 2) . '</span>';
+                    echo '<strong style="color: red; margin-left: 5px;">$' . number_format($product["pro_precio_oferta"], 2) . '</strong>';
+                    echo '<span style="color: green; margin-left: 5px;">(' . $descuento . '% OFF)</span>';
+                } else {
+                    echo '<strong>$' . number_format($product["pro_precio_unitario"], 2) . '</strong>';
+                }
+                echo '</p>';
                 echo '<a href="product_detail.php?id=' . $product['pro_id'] . '" class="btn btn-primary">Ver Detalle</a>';
                 echo '</div>';
                 echo '</div>';

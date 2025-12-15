@@ -105,7 +105,13 @@ class CartManager {
             return [];
         }
         // Asegurarse de que solo se muestren productos disponibles y de categorías activas
-        $query = "SELECT dc.*, p.pro_nombre, p.pro_precio_unitario, p.pro_imagen_url 
+        $query = "SELECT dc.*, p.pro_nombre, 
+                         CASE 
+                             WHEN p.pro_precio_oferta IS NOT NULL AND p.pro_precio_oferta > 0 
+                             THEN p.pro_precio_oferta 
+                             ELSE p.pro_precio_unitario 
+                         END AS pro_precio_final,
+                         p.pro_precio_unitario, p.pro_precio_oferta, p.pro_imagen_url 
                   FROM Detalle_carrito dc
                   JOIN Producto p ON dc.dca_producto = p.pro_id
                   JOIN Categoria c ON p.pro_categoria = c.cat_id
@@ -193,7 +199,8 @@ class CartManager {
         $items = $this->getCartItems();
         $total = 0.0;
         foreach ($items as $item) {
-            $total += $item['dca_cantidad'] * $item['pro_precio_unitario'];
+            $precio = $item['pro_precio_final'] ?? $item['pro_precio_unitario'];
+            $total += $item['dca_cantidad'] * $precio;
         }
         return $total;
     }
@@ -353,4 +360,3 @@ class CartManager {
 } // The proper closing brace for the class
 
 ?>
-

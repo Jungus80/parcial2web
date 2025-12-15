@@ -130,8 +130,32 @@ if ($saleId > 0) {
                         <tr>
                             <td><?= htmlspecialchars($item['pro_nombre']) ?></td>
                             <td><?= (int)$item['dev_cantidad'] ?></td>
-                            <td>$<?= number_format((float)$item['dev_precio_unidad_venta'], 2) ?></td>
-                            <td>$<?= number_format((float)$item['dev_subtotal'], 2) ?></td>
+                            <td>
+                                <?php if (!empty($item['pro_precio_oferta']) && $item['pro_precio_oferta'] > 0): ?>
+                                    <span style="text-decoration: line-through; color: gray;">
+                                        $<?= number_format((float)$item['dev_precio_unidad_venta'], 2) ?>
+                                    </span>
+                                    <strong style="color: red; margin-left: 5px;">
+                                        $<?= number_format((float)$item['pro_precio_oferta'], 2) ?>
+                                    </strong>
+                                    <?php 
+                                    $descuento = round(100 * (1 - ($item['pro_precio_oferta'] / $item['dev_precio_unidad_venta'])));
+                                    ?>
+                                    <span style="color: green; margin-left: 5px;">
+                                        (<?= $descuento ?>% OFF)
+                                    </span>
+                                <?php else: ?>
+                                    $<?= number_format((float)$item['dev_precio_unidad_venta'], 2) ?>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php 
+                                    $precio = (!empty($item['pro_precio_oferta']) && $item['pro_precio_oferta'] > 0) 
+                                        ? $item['pro_precio_oferta'] 
+                                        : $item['dev_precio_unidad_venta'];
+                                ?>
+                                $<?= number_format(((int)$item['dev_cantidad']) * ((float)$precio), 2) ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

@@ -75,10 +75,22 @@ class ExcelReporter {
         $sheet->setCellValue('K1', 'Margen Ganancia (%)');
         $sheet->setCellValue('L1', 'Total Venta');
         $sheet->setCellValue('M1', 'Estado Venta');
+        $sheet->setCellValue('N1', 'Oferta Aplicada');
 
         // Llenar datos
         $row = 2;
         foreach ($salesData as $sale) {
+            // Calcular si hubo oferta
+            $ofertaAplicada = 'No';
+            if (isset($sale['pro_precio_compra']) && isset($sale['dev_precio_unidad_venta'])) {
+                $productoQuery = "SELECT pro_precio_unitario, pro_precio_oferta FROM Producto WHERE pro_nombre = ? LIMIT 1";
+                $productoData = $this->db->query($productoQuery, [$sale['pro_nombre']])->fetch(PDO::FETCH_ASSOC);
+                if (!empty($productoData['pro_precio_oferta']) && $productoData['pro_precio_oferta'] > 0 && $productoData['pro_precio_oferta'] < $productoData['pro_precio_unitario']) {
+                    $descuento = round(100 * (1 - ($productoData['pro_precio_oferta'] / $productoData['pro_precio_unitario'])));
+                    $ofertaAplicada = "Sí ({$descuento}% OFF)";
+                }
+            }
+
             $sheet->setCellValue('A' . $row, $sale['ven_id']);
             $sheet->setCellValue('B' . $row, $sale['ven_fecha']);
             $sheet->setCellValue('C' . $row, $sale['usu_nombre']);
@@ -92,6 +104,7 @@ class ExcelReporter {
             $sheet->setCellValue('K' . $row, number_format($sale['margen_ganancia'], 2));
             $sheet->setCellValue('L' . $row, $sale['ven_total']);
             $sheet->setCellValue('M' . $row, $sale['ven_estado']);
+            $sheet->setCellValue('N' . $row, $ofertaAplicada);
             $row++;
         }
 

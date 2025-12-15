@@ -106,6 +106,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'generate_report') {
             <h3 data-translate-key="report_content_title"><?= Translator::get('report_content_title') ?? 'Contenido del Reporte (CSV simulado)' ?></h3>
             <pre class="report-content"><?= htmlspecialchars($reportContent) ?></pre>
             <p data-translate-key="real_implementation_note"><?= Translator::get('real_implementation_note') ?? 'En una implementación real, aquí se ofrecería un botón para descargar el archivo .xlsx.' ?></p>
+
+            <div style="margin-top: 25px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                <h4 style="color:#007bff;">Leyenda de Ofertas</h4>
+                <p>
+                    <strong>🔸 Nota:</strong> Si una venta incluye productos con <em>precios de oferta</em>, estos aparecerán con la etiqueta
+                    <span style="color:red; font-weight:bold;">Oferta Aplicada</span> en los reportes y exportaciones.
+                </p>
+                <ul>
+                    <li><strong>Precio de venta con oferta:</strong> corresponde a <em>pro_precio_oferta</em> cuando estaba disponible.</li>
+                    <li><strong>Precio normal:</strong> indica que no se aplicaron descuentos al producto.</li>
+                </ul>
+                <p>Para más detalle puede verificarse en las secciones <strong>Detalles del Pedido</strong> o <strong>Factura PDF</strong>.</p>
+            </div>
         <?php endif; ?>
 
     </div>

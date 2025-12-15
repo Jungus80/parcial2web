@@ -41,7 +41,24 @@ if (!$product) {
     </div>
     <div class="product-info-section">
         <h2><?= htmlspecialchars($product['pro_nombre'] ?? 'Producto sin nombre') ?></h2>
-        <p class="price">$<?= number_format($product['pro_precio_unitario'], 2) ?></p>
+        <p class="price">
+          <?php if (!empty($product['pro_precio_oferta']) && $product['pro_precio_oferta'] > 0): ?>
+            <span class="precio-original" style="text-decoration: line-through; color: gray;">
+              $<?= number_format($product['pro_precio_unitario'], 2) ?>
+            </span>
+            <strong class="precio-oferta" style="color: red; margin-left: 5px;">
+              $<?= number_format($product['pro_precio_oferta'], 2) ?>
+            </strong>
+            <?php 
+            $descuento = round(100 * (1 - ($product['pro_precio_oferta'] / $product['pro_precio_unitario'])));
+            ?>
+            <span style="color: green; margin-left: 5px;">
+              (<?= $descuento ?>% OFF)
+            </span>
+          <?php else: ?>
+            $<?= number_format($product['pro_precio_unitario'], 2) ?>
+          <?php endif; ?>
+        </p>
         <p class="description"><?= nl2br(htmlspecialchars($product['pro_descripcion'])) ?></p>
         <p><strong>Categoría:</strong> <?= htmlspecialchars($product['cat_nombre'] ?? 'N/A') ?></p>
         <p><strong>Proveedor:</strong> <?= htmlspecialchars($product['prv_nombre'] ?? 'N/A') ?></p>

@@ -67,12 +67,29 @@ class PdfInvoiceGenerator
             $precio = (float)($item['dev_precio_unidad_venta'] ?? 0);
             $subt   = (float)($item['dev_subtotal'] ?? ($cant * $precio));
 
+            // Verificar oferta si el producto tiene precio original distinto del precio de venta
+            $productoInfo = $this->db->query("SELECT pro_precio_unitario, pro_precio_oferta FROM Producto WHERE pro_id = ?", [$item['dev_producto']])->fetch(PDO::FETCH_ASSOC);
+            $precioOriginal = (float)($productoInfo['pro_precio_unitario'] ?? $precio);
+            $precioOferta   = (float)($productoInfo['pro_precio_oferta'] ?? 0);
+
+            $precioTexto = '';
+            if ($precioOferta > 0 && $precioOferta < $precioOriginal) {
+                $descuento = round(100 * (1 - ($precioOferta / $precioOriginal)));
+                $precioTexto = "Oferta $" . number_format($precioOferta, 2) . " (" . $descuento . "% OFF)";
+            } else {
+                $precioTexto = "$" . number_format($precio, 2);
+            }
+
             $pdf->Cell(80, 7, mb_convert_encoding($nombre, 'ISO-8859-1', 'UTF-8'), 1);
             $pdf->Cell(20, 7, (string)$cant, 1);
-            $pdf->Cell(40, 7, '$' . number_format($precio, 2), 1);
+            $pdf->Cell(40, 7, mb_convert_encoding($precioTexto, 'ISO-8859-1', 'UTF-8'), 1);
             $pdf->Cell(40, 7, '$' . number_format($subt, 2), 1);
             $pdf->Ln();
         }
+
+        $pdf->Ln(4);
+        $pdf->SetFont('Arial', 'I', 9);
+        $pdf->MultiCell(0, 6, mb_convert_encoding('Los precios bajo "Oferta" reflejan descuentos aplicados durante la compra.', 'ISO-8859-1', 'UTF-8'), 0, 'L');
 
         $total = (float)($sale['ven_total'] ?? 0);
 

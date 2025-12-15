@@ -65,6 +65,7 @@ CREATE TABLE Producto (
   pro_proveedor INT,
   pro_categoria INT,
   pro_imagen_url VARCHAR(255) NULL, -- Nueva columna para la URL de la imagen del producto
+  pro_precio_oferta DECIMAL(10,2) DEFAULT NULL,
 
   CONSTRAINT ck_precio_unitario CHECK (pro_precio_unitario > 0),
   CONSTRAINT ck_stock CHECK (pro_cantidad_stock >= 0),

@@ -60,11 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $descripcion = $_POST['pro_descripcion'] ?? '';
     $precioUnitario = (float)($_POST['pro_precio_unitario'] ?? 0.0);
     $precioCompra = isset($_POST['pro_precio_compra']) && $_POST['pro_precio_compra'] !== '' ? (float)$_POST['pro_precio_compra'] : null;
-    $cantidadStock = (int)($_POST['pro_cantidad_stock'] ?? 0);
+    $precioOferta = isset($_POST['pro_precio_oferta']) && $_POST['pro_precio_oferta'] !== '' ? (float)$_POST['pro_precio_oferta'] : null;
+    $cantidadStock = isset($_POST['pro_cantidad_stock']) && $_POST['pro_cantidad_stock'] !== ''
+
+        ? (int)$_POST['pro_cantidad_stock']
+        : null;
     $disponible = isset($_POST['pro_disponible']) ? 1 : 0;
     $fechaEntrada = $_POST['pro_fecha_entrada'] ?? null;
-    $proveedorId = (int)($_POST['pro_proveedor'] ?? 0);
-    $categoriaId = (int)($_POST['pro_categoria'] ?? 0);
+    $proveedorId = isset($_POST['pro_proveedor']) ? (int)$_POST['pro_proveedor'] : null;
+    $categoriaId = isset($_POST['pro_categoria']) ? (int)$_POST['pro_categoria'] : null;
     $imagenUrl = $_POST['pro_imagen_url'] ?? null;
 
     $proveedorId = ($proveedorId === 0) ? null : $proveedorId;
@@ -73,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'create') {
         if (empty($nombre) || $precioUnitario <= 0 || $cantidadStock < 0) {
             $error = 'Datos de producto incompletos o inválidos.';
-        } elseif ($productManager->createProduct($nombre, $descripcion, $precioUnitario, $precioCompra, $cantidadStock, $disponible, $fechaEntrada, $proveedorId, $categoriaId, $imagenUrl)) {
+        } elseif ($productManager->createProduct($nombre, $descripcion, $precioUnitario, $precioCompra, $precioOferta, $cantidadStock, $disponible, $fechaEntrada, $proveedorId, $categoriaId, $imagenUrl)) {
             $message = 'Producto creado exitosamente.';
         } else {
             $error = 'Error al crear producto.';
@@ -81,15 +85,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'update') {
         if ($productId === 0 || empty($nombre) || $precioUnitario <= 0 || $cantidadStock < 0) {
             $error = 'Datos de producto incompletos o inválidos para actualización.';
-        } elseif ($productManager->updateProduct($productId, $nombre, $descripcion, $precioUnitario, $precioCompra, $cantidadStock, $disponible, $fechaEntrada, $proveedorId, $categoriaId)) {
+        } elseif ($productManager->updateProduct($productId, $nombre, $descripcion, $precioUnitario, $precioCompra, $precioOferta, $cantidadStock, $disponible, $fechaEntrada, $proveedorId, $categoriaId)) {
+            
             $message = 'Producto actualizado exitosamente.';
+            // Recargar datos actualizados
+            $editProduct = $productManager->getProductById($productId);
         } else {
             $error = 'Error al actualizar producto.';
         }
     }
 }
 
-$products = $productManager->getAllProducts();
+$incluirInactivos = isset($_GET['show_inactive']) && $_GET['show_inactive'] == '1';
+
+// Mostrar mensaje o restaurar producto si corresponde
+if (isset($_GET['action']) && $_GET['action'] === 'restore' && isset($_GET['id'])) {
+    if ($productManager->restoreProduct((int)$_GET['id'])) {
+        $message = 'Producto reactivado exitosamente.';
+    } else {
+        $error = 'No se pudo reactivar el producto.';
+    }
+}
+
+// Obtener productos según filtro de visibilidad
+$products = $productManager->getAllProducts($incluirInactivos);
 
 ?>
 <!DOCTYPE html>
@@ -132,6 +151,10 @@ $products = $productManager->getAllProducts();
             <div class="form-group">
                 <label for="pro_precio_compra" data-translate-key="purchase_price_label"><?= Translator::get('purchase_price_label') ?? 'Precio de Compra' ?>:</label>
                 <input type="number" step="0.01" min="0" id="pro_precio_compra" name="pro_precio_compra" value="<?= $editProduct['pro_precio_compra'] ?? '' ?>" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="pro_precio_oferta">Precio de Oferta:</label>
+                <input type="number" step="0.01" min="0" id="pro_precio_oferta" name="pro_precio_oferta" value="<?= $editProduct['pro_precio_oferta'] ?? '' ?>" class="form-control">
             </div>
             <div class="form-group">
                 <label for="pro_cantidad_stock" data-translate-key="quantity_in_stock_label"><?= Translator::get('quantity_in_stock_label') ?? 'Cantidad en Stock' ?>:</label>
@@ -178,6 +201,14 @@ $products = $productManager->getAllProducts();
         </form>
 
         <h3 data-translate-key="product_list_title"><?= Translator::get('product_list_title') ?? 'Lista de Productos' ?></h3>
+        <div style="margin-bottom: 15px;">
+            <form method="GET" action="products.php">
+                <label>
+                    <input type="checkbox" name="show_inactive" value="1" <?= $incluirInactivos ? 'checked' : '' ?> onchange="this.form.submit()">
+                    Mostrar productos inactivos
+                </label>
+            </form>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -199,7 +230,14 @@ $products = $productManager->getAllProducts();
                     <td><?= $product['pro_id'] ?></td>
                     <td><?= $product['pro_nombre'] ?></td>
                     <td><?= substr($product['pro_descripcion'], 0, 50) ?>...</td>
-                    <td><?= $product['pro_precio_unitario'] ?></td>
+                    <td>
+                        <?php if (!empty($product['pro_precio_oferta']) && $product['pro_precio_oferta'] > 0): ?>
+                            <span style="text-decoration: line-through; color: gray;"><?= htmlspecialchars($product['pro_precio_unitario']) ?></span>
+                            <strong style="color: red; margin-left: 5px;"><?= htmlspecialchars($product['pro_precio_oferta']) ?></strong>
+                        <?php else: ?>
+                            <?= htmlspecialchars($product['pro_precio_unitario']) ?>
+                        <?php endif; ?>
+                    </td>
                     <td><?= $product['pro_cantidad_stock'] ?></td>
                     <td><?= $product['pro_disponible'] ? (Translator::get('yes') ?? 'Sí') : (Translator::get('no') ?? 'No') ?></td>
                     <td><?= $product['prv_nombre'] ?></td>
@@ -213,7 +251,11 @@ $products = $productManager->getAllProducts();
                     </td>
                     <td class="actions">
                         <a href="products.php?action=edit&id=<?= $product['pro_id'] ?>" class="btn btn-sm btn-info" data-translate-key="edit_button"><?= Translator::get('edit_button') ?? 'Editar' ?></a> 
-                        <a href="products.php?action=delete&id=<?= $product['pro_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('<?= Translator::get('confirm_delete_product') ?? '¿Estás seguro de eliminar este producto?' ?>');" data-translate-key="delete_button"><?= Translator::get('delete_button') ?? 'Eliminar' ?></a>
+                        <?php if ($product['pro_disponible']): ?>
+                            <a href="products.php?action=delete&id=<?= $product['pro_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('<?= Translator::get('confirm_delete_product') ?? '¿Estás seguro de eliminar este producto?' ?>');" data-translate-key="delete_button"><?= Translator::get('delete_button') ?? 'Eliminar' ?></a>
+                        <?php else: ?>
+                            <a href="products.php?action=restore&id=<?= $product['pro_id'] ?>" class="btn btn-sm btn-success" onclick="return confirm('¿Deseas reactivar este producto?');">Reactivar</a>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>
